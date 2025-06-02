@@ -1,5 +1,5 @@
 export interface baseArticulos {
-    articulo_id: number
+    articulo_id: string
     articulo_title: string
     cantidad: number
     articulo_precio: number

@@ -1,4 +1,5 @@
 import { ArticuloID, listaArticulos } from "../types"
+import React from "react"
 
 interface Props{
     articulos: listaArticulos

@@ -1,48 +1,39 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import React from "react";
+import { useEffect, useState} from "react";
 import { Buton } from "./components/Buttons";
 import { Lista } from "./components/Lista";
 import { ArticuloID, listaArticulos } from "./types";
-import { createClient } from "@supabase/supabase-js";
-import { VITE_SUPABASE_ANON_KEY, VITE_SUPABASE_URL } from "./lib/conexiondatos";
+import { supabase } from "./utils/supabase/auth";
+import { Session } from "@supabase/supabase-js";
+import LoginButtons from "./components/LoginButtons";
+import { LogoutButton } from "./components/LogoutButton";
+import { EliminarArticulo } from "./components/EliminarArticulo";
 
-const supabase = createClient(VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY);
 
-/*const pruevaButons = [
-  {
-    id: '1',
-    title: 'new york',
-    cantidad: 0,
-    precio: 12.2
-  },
-  {
-    id: '2',
-    title: 'goat',
-    cantidad: 0,
-    precio: 15.5
-  },
-  {
-    id: '3',
-    title: 'preri',
-    cantidad: 0,
-    precio: 13.4
-  },
-  {
-    id: '4',
-    title: 'yanki',
-    cantidad: 0,
-    precio: 10.9
-  }
-] */
 
-export default function Home() {
 
-    const [listas, actualLista] = useState<listaArticulos>([])    
+export default function Home () {
+
+    const [listas, actualLista] = useState<listaArticulos>([])
+    const [session, setSession] = useState<Session | null>(null);
+    const [ArticuloSelecionado,setArticuloSelecionado] = useState< string | null >(null)
 
     useEffect(() => {
-      getInstruments();
-    }, []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, []);
+
+
+    useEffect(() => {
+    if (session) getInstruments();
+  }, [session]);
+
     async function getInstruments() {
       const { data } = await supabase.from("articulo").select("*");
       if (data) {
@@ -51,7 +42,6 @@ export default function Home() {
           ...item,
           cantidad: 0
         })) as listaArticulos;
-          console.log(articulosConCantidad)
           actualLista(articulosConCantidad);
       }
     }
@@ -70,19 +60,44 @@ export default function Home() {
     actualLista(newCompleted)
 
     }
+    const eliminarCantidad =({articulo_id}: ArticuloID): void=>{
+      const newCompleted = listas.map(lista => {
+      if(lista.articulo_id === articulo_id){
+        return{
+          ... lista,
+          cantidad: 0
+        }
+      }
+      return lista
+    })
 
+    actualLista(newCompleted)
 
+    }
+
+    if (!session) {
+    return  <div className="flex flex-col items-center justify-center min-h-screen p-4">
+              <LoginButtons />
+            </div>;
+  }
 
 
     return (
    <div className="flex">
       <Lista
-        articulos={listas} 
+        articulos={listas}
+        ArticuloSelecionado={ArticuloSelecionado}
+        setArticuloSelecionado={setArticuloSelecionado} 
         />
       <Buton
         añadirArticulo={modificarCantidad}
         articulos={listas} 
         />
+      <LogoutButton/>
+      <EliminarArticulo
+        ArticuloSelecionado={ArticuloSelecionado}
+        eliminarCantidad={eliminarCantidad}
+      />      
     </div>
   );
 }
