@@ -42,9 +42,27 @@ export default function Home () {
           ...item,
           cantidad: 0
         })) as listaArticulos;
+        console.log(articulosConCantidad)
           actualLista(articulosConCantidad);
       }
     }
+    async function name() {
+      try{
+      const {data,error} = await supabase.from("articulo").select("articulo_ingredientes")
+       if (error) {
+      console.error("Error al obtener los ingredientes:", error.message);
+      return;
+      }
+      if(data){
+        const ingredientes = data.map(item => item.articulo_ingredientes)
+        console.log(ingredientes)
+      } 
+      }catch (err) {
+        console.error("error inesperado", err)
+      }
+      
+    }
+   
 
     const modificarCantidad =({articulo_id}: ArticuloID): void=>{
       const newCompleted = listas.map(lista => {
@@ -80,20 +98,23 @@ export default function Home () {
               <LoginButtons />
             </div>;
   }
+  
 
 
     return (
-   <div className="flex">
+   <div className="grid grid-rows-10 grid-cols-4 p-4 gap-4 border-2 h-lvh">
+      <LogoutButton/>
       <Lista
         articulos={listas}
         ArticuloSelecionado={ArticuloSelecionado}
         setArticuloSelecionado={setArticuloSelecionado} 
+        name={name}
         />
       <Buton
         añadirArticulo={modificarCantidad}
         articulos={listas} 
         />
-      <LogoutButton/>
+      
       <EliminarArticulo
         ArticuloSelecionado={ArticuloSelecionado}
         eliminarCantidad={eliminarCantidad}
